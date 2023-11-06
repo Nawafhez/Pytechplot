@@ -47,43 +47,24 @@ tp.macro.execute_command('$!RedrawAll')
 tp.macro.execute_command('''$!Pick SetMouseMode
   MouseMode = Select''')
 
-tp.active_frame().plot_type=PlotType.XYLine
-tp.active_frame().plot().delete_linemaps()
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(0).name='&ZN&'
-tp.active_frame().plot().linemaps(0).y_variable_index=12
-tp.active_frame().plot().linemaps(0).zone_index=1
-tp.active_frame().plot().linemaps(0).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(1).name='&ZN&'
-tp.active_frame().plot().linemaps(1).y_variable_index=12
-tp.active_frame().plot().linemaps(1).zone_index=2
-tp.active_frame().plot().linemaps(1).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(2).name='&ZN&'
-tp.active_frame().plot().linemaps(2).y_variable_index=12
-tp.active_frame().plot().linemaps(2).zone_index=3
-tp.active_frame().plot().linemaps(2).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(3).name='&ZN&'
-tp.active_frame().plot().linemaps(3).y_variable_index=12
-tp.active_frame().plot().linemaps(3).zone_index=4
-tp.active_frame().plot().linemaps(3).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(4).name='&ZN&'
-tp.active_frame().plot().linemaps(4).y_variable_index=12
-tp.active_frame().plot().linemaps(4).zone_index=5
-tp.active_frame().plot().linemaps(4).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(5).name='&ZN&'
-tp.active_frame().plot().linemaps(5).y_variable_index=12
-tp.active_frame().plot().linemaps(5).zone_index=6
-tp.active_frame().plot().linemaps(5).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(6).name='&ZN&'
-tp.active_frame().plot().linemaps(6).y_variable_index=12
-tp.active_frame().plot().linemaps(6).zone_index=7
-tp.active_frame().plot().linemaps(6).show=True
+frame= tp.active.frame() 
+plot = frame.plot()
+
+frame.plot_type=PlotType.XYLine
+plot.plot().delete_linemaps()
+plot.plot().add_linemap()
+
+for i in range(6): 
+  
+  Edit= plot.linmaps(i)
+
+  Edit.name='&ZN&'
+  Edit.y_variable_index=12
+  Edit.zone_index=i+1
+  Edit.show=True
+  plot.add_linemap()
+
+
 tp.active_frame().plot().view.fit()
 
 tp.active_frame().plot().axes.y_axis(0).reverse=True
