@@ -1,6 +1,7 @@
 import tecplot as tp
 from tecplot.exception import *
 from tecplot.constant import *
+import numpy as np
 
 # Uncomment the following line to connect to a running instance of Tecplot 360:
 tp.session.connect()
@@ -13,7 +14,7 @@ tp.macro.execute_command("""$!ReadDataSet  '\"/storage/home/nka5267/work/OneraM6
   VarNameList = '\"x\" \"y\" \"z\" \"Density\" \"Momentum U (Density*U)\" \"Momentum V (Density*V)\" \"Momentum W (Density*W)\" \"Energy (Density*E)\" \"SA Turbulent Eddy Viscosity\" \"Pressure\" \"Temperature\" \"Pressure_Coefficient\" \"Mach\" \"Laminar_Viscosity\" \"Skin_Friction_Coefficient\" \"Heat_Flux\" \"Y_Plus\" \"Eddy_Viscosity\"'""")
 
 frame = tp.active_frame()
-tp.macro.execute_command('$!RedrawAll')
+frame.plot_type = PlotType.Cartesian3D
 
 plot= frame.plot()
 
@@ -45,15 +46,10 @@ slices.edge.show = False
 slices.extract(transient_mode=TransientOperationMode.AllSolutionTimes)
 
 
-tp.macro.execute_command('$!RedrawAll')
-
 frame.add_frame(position=(0.69203,5.1888), size=(6.3385,2.606))
 
 tp.macro.execute_extended_command(command_processor_id='Multi Frame Manager',
     command='TILEFRAMESHORIZ')
-tp.macro.execute_command('$!RedrawAll')
-tp.macro.execute_command('''$!Pick SetMouseMode
-  MouseMode = Select''')
 
 frame.plot_type = tecplot.constant.PlotType.XYLine
 
