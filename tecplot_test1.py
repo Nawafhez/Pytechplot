@@ -1,7 +1,7 @@
 import tecplot as tp
 from tecplot.exception import *
 from tecplot.constant import *
-import numpy as np
+import numpy as np 
 
 # Uncomment the following line to connect to a running instance of Tecplot 360:
 tp.session.connect()
@@ -22,52 +22,58 @@ plot= frame.plot()
 cont = plot.contour(0)
 cont.variable = frame.dataset.variable('y')
 cont.levels.reset_levels(np.linspace(0,1.2,13))
-cont.legend.show = False
+cont.legend.show = True
+tp.macro.execute_command('$!RedrawAll')
 
 #Setup the Slices
-plot.show_slices=True
-slices = plot.slices(0)
+frame.plot(PlotType.Cartesian3D).show_slices=True
+slices = plot.slice(0)
+
 slices.slice_source = SliceSource.SurfaceZones
-slices.orientation = SliceSource.YPlanes
+slices.orientation = SliceSurface.YPlanes
+
 slices.show_primary_slice=False
 slices.show_start_and_end_slices=True
 slices.show_intermediate_slices=True
 slices.num_intermediate_slices=5
 slices.start_position.y=0
-slices.start_position.y=1.19
+slices.end_position.y=1.19
 
-#Adjust slices settings 
+#Adjust slices settings & Extracting it  
 slices.contour.show = False
 slices.mesh.show = True
 slices.mesh.color = cont
 slices.mesh.line_thickness = 0.6
 slices.edge.show = False
 
-slices.extract(transient_mode=TransientOperationMode.AllSolutionTimes)
+extracted_slices = slices.extract(transient_mode=TransientOperationMode.AllSolutionTimes)
 
 
-frame.add_frame(position=(0.69203,5.1888), size=(6.3385,2.606))
+#Introducing a new page for Prussure Coeffecient plot
+tp.active_page().add_frame(position=(0.69203,5.1888), size=(6.3385,2.606))
 
-tp.macro.execute_extended_command(command_processor_id='Multi Frame Manager',
-    command='TILEFRAMESHORIZ')
 
-frame.plot_type = tecplot.constant.PlotType.XYLine
+#Redefinig the varibles
+frame= tp.active_page()
+plot= frame.plot()
 
+#Plotting the Cp plots
+frame.plot_type = tp.constant.PlotType.XYLine
 plot.delete_linemaps()
 
-
-for i in range(7): 
-  
-
-  plot.linemaps(i).name='&ZN&'
-  plot.linemaps(i).y_variable_index=12
-  plot.linemaps(i).zone_index=i+1
-  plot.linemaps(i).show=True
-  
+cp_linemap = plot.add_linemap(
+    name=extracted_slice.name=='&Cp&',
+    zone=extracted_slices,
+    x=dataset.variable('x'),
+    y=dataset.variable('Pressure_Coefficient'))
 
 
-tp.active_frame().plot().view.fit()
-
+plot.view.fit()
 tp.active_frame().plot().axes.y_axis(0).reverse=True
+
 tp.macro.execute_command('$!RedrawAll')
+
+# export image of pressure coefficient as a function of x/c
+tecplot.export.save_png('wing_pressure_coefficient.png', 600, supersample=3)
+
 # End Macro.

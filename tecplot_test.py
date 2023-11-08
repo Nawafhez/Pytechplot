@@ -1,92 +1,108 @@
 import tecplot as tp
-from tecplot.exception import *
-from tecplot.constant import *
+from tecplot.constant import SliceSource, SliceSurface, PlotType, AxisMode, TransientOperationMode
 
-# Uncomment the following line to connect to a running instance of Tecplot 360:
-tp.session.connect()
-
-tp.macro.execute_command("""$!ReadDataSet  '\"STANDARDSYNTAX\" \"1.0\" \"FILENAME_FILE\" \"/storage/home/dba5321/RoarCollab/data/surface_flow.vtu\"'
-  DataSetReader = 'VTK Data Loader'
+tp.macro.execute_command("""$!ReadDataSet  '\"/storage/home/nka5267/work/OneraM6_SU2_RANS.plt\" '
   ReadDataOption = New
   ResetStyle = No
+  VarLoadMode = ByName
   AssignStrandIDs = Yes
-  InitialPlotType = Automatic
-  InitialPlotFirstZoneOnly = No
-  AddZonesToExistingStrands = No
-  VarLoadMode = ByName""")
-tp.active_frame().plot_type=PlotType.Cartesian3D
-tp.macro.execute_command('$!RedrawAll')
-tp.active_frame().plot().rgb_coloring.red_variable_index=3
-tp.active_frame().plot().rgb_coloring.green_variable_index=3
-tp.active_frame().plot().rgb_coloring.blue_variable_index=3
-tp.active_frame().plot().slice(0).edge.show=True
-tp.active_frame().plot().slice(0).slice_source=SliceSource.SurfaceZones
-tp.active_frame().plot().contour(0).variable_index=3
-tp.active_frame().plot().contour(1).variable_index=4
-tp.active_frame().plot().contour(2).variable_index=5
-tp.active_frame().plot().contour(3).variable_index=6
-tp.active_frame().plot().contour(4).variable_index=7
-tp.active_frame().plot().contour(5).variable_index=8
-tp.active_frame().plot().contour(6).variable_index=9
-tp.active_frame().plot().contour(7).variable_index=10
-tp.active_frame().plot(PlotType.Cartesian3D).show_slices=True
-tp.active_frame().plot().slice(0).show_primary_slice=False
-tp.active_frame().plot().slice(0).show_start_and_end_slices=True
-tp.active_frame().plot().slice(0).start_position.x=0
-tp.active_frame().plot().slice(0).show_intermediate_slices=True
-tp.active_frame().plot().slice(0).num_intermediate_slices=5
-tp.active_frame().plot().slice(0).orientation=SliceSurface.YPlanes
-tp.active_frame().plot().slice(0).start_position.y=0
-tp.active_frame().plot().slices(0).extract(transient_mode=TransientOperationMode.AllSolutionTimes)
-tp.macro.execute_command('$!RedrawAll')
-tp.active_page().add_frame(position=(0.69203,5.1888),
-    size=(6.3385,2.606))
-tp.macro.execute_extended_command(command_processor_id='Multi Frame Manager',
-    command='TILEFRAMESHORIZ')
-tp.macro.execute_command('$!RedrawAll')
-tp.macro.execute_command('''$!Pick SetMouseMode
-  MouseMode = Select''')
+  VarNameList = '\"x\" \"y\" \"z\" \"Density\" \"Momentum U (Density*U)\" \"Momentum V (Density*V)\" \"Momentum W (Density*W)\" \"Energy (Density*E)\" \"SA Turbulent Eddy Viscosity\" \"Pressure\" \"Temperature\" \"Pressure_Coefficient\" \"Mach\" \"Laminar_Viscosity\" \"Skin_Friction_Coefficient\" \"Heat_Flux\" \"Y_Plus\" \"Eddy_Viscosity\"'""")
 
-tp.active_frame().plot_type=PlotType.XYLine
-tp.active_frame().plot().delete_linemaps()
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(0).name='&ZN&'
-tp.active_frame().plot().linemaps(0).y_variable_index=12
-tp.active_frame().plot().linemaps(0).zone_index=1
-tp.active_frame().plot().linemaps(0).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(1).name='&ZN&'
-tp.active_frame().plot().linemaps(1).y_variable_index=12
-tp.active_frame().plot().linemaps(1).zone_index=2
-tp.active_frame().plot().linemaps(1).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(2).name='&ZN&'
-tp.active_frame().plot().linemaps(2).y_variable_index=12
-tp.active_frame().plot().linemaps(2).zone_index=3
-tp.active_frame().plot().linemaps(2).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(3).name='&ZN&'
-tp.active_frame().plot().linemaps(3).y_variable_index=12
-tp.active_frame().plot().linemaps(3).zone_index=4
-tp.active_frame().plot().linemaps(3).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(4).name='&ZN&'
-tp.active_frame().plot().linemaps(4).y_variable_index=12
-tp.active_frame().plot().linemaps(4).zone_index=5
-tp.active_frame().plot().linemaps(4).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(5).name='&ZN&'
-tp.active_frame().plot().linemaps(5).y_variable_index=12
-tp.active_frame().plot().linemaps(5).zone_index=6
-tp.active_frame().plot().linemaps(5).show=True
-tp.active_frame().plot().add_linemap()
-tp.active_frame().plot().linemaps(6).name='&ZN&'
-tp.active_frame().plot().linemaps(6).y_variable_index=12
-tp.active_frame().plot().linemaps(6).zone_index=7
-tp.active_frame().plot().linemaps(6).show=True
-tp.active_frame().plot().view.fit()
 
-tp.active_frame().plot().axes.y_axis(0).reverse=True
+# Connect to a running instance of Tecplot 360 if needed
+# tp.session.connect()
+
+# Get the active frame and its plot
+frame = tp.active_frame()
+plot = frame.plot()
+
+# Set contour variables & colormap
+plot.contour(0).variable_index = 1
+plot.contour(0).colormap_name = 'Modern'
+
+# Show contour and slices
+plot.show_contour = True
+plot.show_slices = True
+
+# Set slices properties
+y_positions = [0.0425727, 0.316254, 0.604532, 0.935383, 1.17379]
+for i, y in enumerate(y_positions):
+    slice_ = plot.slice(i)
+    slice_.slice_source = SliceSource.SurfaceZones
+    slice_.orientation = SliceSurface.YPlanes
+    slice_.origin.y = y
+    slice_.edge.show = True
+    slice_.mesh.show = True
+    slice_.mesh.color = plot.contour(0)
+    slice_.mesh.line_thickness = 0.8
+    slice_.edge.show = False
+
+
+# Extract slices
+plot.slices(0,1,2,3,4).extract(transient_mode=TransientOperationMode.AllSolutionTimes)
+
+# Update the view of the plot
+plot.view.position = (6.96919, plot.view.position[1], plot.view.position[2])
+plot.view.width = 1.62394
+
+# Update axes scales
+x_axis_scale_factors = [1.1, 1.21, 1.331, 1.4641, 1.61051, 1.77156, 1.94872, 2.14359, 2.35795, 2.59374]
+for scale in x_axis_scale_factors:
+    plot.axes.x_axis.scale_factor = scale
+
+# Redraw the plot
 tp.macro.execute_command('$!RedrawAll')
-# End Macro.
 
+# Additional settings for the x and z axes
+plot.axes.x_axis.show = True
+plot.axes.z_axis.show = True
+plot.axes.axis_mode = AxisMode.Independent
+
+# Define the variable indices for Cp and x
+cp_var_index = 11  # replace with the actual index for Cp
+x_var_index = 0   # replace with the actual index for x
+
+# Get the dataset
+dataset = tp.active_frame().dataset
+
+# Loop to create a new frame and plot for each Cp graph
+for i in range(number_of_graphs):  # Replace with the actual number of Cp graphs
+    # Create a new frame
+    frame = tp.active_frame().add_frame()
+    
+    # Set the frame mode to 2D
+    frame.plot_type = PlotType.XYLine
+    
+    # Get the plot in the new frame
+    plot = frame.plot()
+    
+    # Set up the axes for the plot
+    plot.axes.x_axis.variable = dataset.variable(x_var_index)
+    plot.axes.y_axis.variable = dataset.variable(cp_var_index)
+    
+    # Create an XY line from the slice zone data
+    slice_zone = extracted_slices.zone(i)
+    x_vals = slice_zone.values('x')[:]
+    cp_vals = slice_zone.values('Pressure_Coefficient')[:]
+
+    # Add a new XY line plot with the extracted Cp vs. x data
+    line = plot.add_xy_line(x_vals,cp_vals)
+    
+    # Set the line properties, such as color and line thickness
+    line.line.color = tp.constant.Color.Blue
+    line.line.line_thickness = 0.8
+    
+    # Optionally, set the title of the graph to something descriptive
+    plot.title = f"Cp vs. x Graph {i+1}"
+    
+    # Redraw the frame
+    frame.draw()
+
+# Activate the first frame at the end
+tp.active_page().frames[0].activate()
+
+
+# Final redraw of the plot
+tp.macro.execute_command('$!RedrawAll')
+
+# End of script

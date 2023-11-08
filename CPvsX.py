@@ -169,7 +169,8 @@ tp.active_frame().plot().axes.x_axis.scale_factor=2.35795
 tp.active_frame().plot().axes.x_axis.scale_factor=2.59374
 tp.active_frame().plot().axes.x_axis.scale_factor=2.85312
 tp.active_frame().plot().axes.x_axis.scale_factor=3.13843
-tp.macro.execute_command('$!RedrawAll')
+
+
 tp.active_frame().plot().view.position=(0.457045,
     tp.active_frame().plot().view.position[1],
     tp.active_frame().plot().view.position[2])
