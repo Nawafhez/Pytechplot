@@ -1,6 +1,7 @@
 import tecplot as tp
-from tecplot.constant import SliceSource, SliceSurface, PlotType, AxisMode, TransientOperationMode
 import pandas as pd
+import os
+import argparse
 
 #Argparse
 
@@ -14,9 +15,12 @@ tp.macro.execute_command("""$!ReadDataSet  '\"/storage/home/nka5267/work/OneraM6
   AssignStrandIDs = Yes
   VarNameList = '\"x\" \"y\" \"z\" \"Density\" \"Momentum U (Density*U)\" \"Momentum V (Density*V)\" \"Momentum W (Density*W)\" \"Energy (Density*E)\" \"SA Turbulent Eddy Viscosity\" \"Pressure\" \"Temperature\" \"Pressure_Coefficient\" \"Mach\" \"Laminar_Viscosity\" \"Skin_Friction_Coefficient\" \"Heat_Flux\" \"Y_Plus\" \"Eddy_Viscosity\"'""")
 
+path = os. get_cwd()
+print(path)
+
 # Get the active frame and its plot
 frame = tp.active_frame()
-frame.plot_type = PlotType.Cartesian3D
+frame.plot_type = tp.constant.PlotType.Cartesian3D
 plot = frame.plot()
 
 
@@ -33,13 +37,13 @@ dataset = tp.active_frame().dataset
 y= dataset.variable(1)
 
 # Set slices properties
-y_positions = [0, y/4, y/2 , 3*y/4, y]
+y_positions = [0, y/4, y/2, 3*y/4, y]
 
 for i, y in enumerate(y_positions):
     slice_ = plot.slice(i)
     slice_.show = True
-    slice_.slice_source = SliceSource.SurfaceZones
-    slice_.orientation = SliceSurface.YPlanes
+    slice_.slice_source = tp.constant.SliceSource.SurfaceZones
+    slice_.orientation = tp.constant.SliceSurface.YPlanes
     slice_.origin.y = y
     slice_.edge.show = False
     slice_.mesh.show = True
@@ -48,7 +52,7 @@ for i, y in enumerate(y_positions):
 
 
 # Extract slices
-plot.slices(0,1,2,3,4).extract(transient_mode=TransientOperationMode.AllSolutionTimes)
+extracted_slices = plot.slices(0, 1, 2, 3, 4).extract(transient_mode=tp.constant.TransientOperationMode.AllSolutionTimes)
 
 # Update the view of the plot
 plot.view.position = (6.96919, plot.view.position[1], plot.view.position[2])
@@ -60,7 +64,7 @@ tp.macro.execute_command('$!RedrawAll')
 # Additional settings for the x and z axes
 plot.axes.x_axis.show = True
 plot.axes.z_axis.show = True
-plot.axes.axis_mode = AxisMode.Independent
+plot.axes.axis_mode = tp.constant.AxisMode.Independent
 
 # Define the variable indices for Cp and x
 cp_var_index = 11  
@@ -69,13 +73,14 @@ x_var_index = 0
 
 
 # Loop to create a new frame and plot for each Cp graph
+
 for i in range(5):
 
     # Create a new frame
     frame = tp.active_page().add_frame()
     
     # Set the frame mode to 2D
-    frame.plot_type = PlotType.XYLine
+    frame.plot_type = tp.constant.PlotType.XYLine
     
     # Get the plot in the new frame
     plot = frame.plot()
