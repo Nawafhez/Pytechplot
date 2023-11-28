@@ -27,11 +27,11 @@ Pressure_Coefficient = dataset.zone(1).values(11)[:]
 x = dataset.zone(1).values(0)[:]
 y = dataset.zone(1).values(1)[:]
 
-Cp= pd.series(Pressure_Coefficient)
-X = pd.series(x)
-Y = pd.series(y)
-
-print(Cp)
+Cp= pd.Series(Pressure_Coefficient)
+X = pd.Series(x)
+Y = pd.Series(y)
+Ymax = Y.max()-0.03
+print(Ymax)
 
 
 # Set contour variables & colormap
@@ -43,20 +43,19 @@ plot.show_contour = False
 plot.show_slices = True
 
 # Set slices properties
-y_positions = [0, y/4, y/2, 3*y/4, y]
+y_positions = [0, Ymax/4, Ymax/2, 3*Ymax/4, Ymax]
 
-for i, y in enumerate(y_positions):
+for i, y1 in enumerate(y_positions):
     slice_ = plot.slice(i)
     slice_.show = True
     slice_.slice_source = tp.constant.SliceSource.SurfaceZones
     slice_.orientation = tp.constant.SliceSurface.YPlanes
-    slice_.origin.y = 0
+    slice_.origin.y = y1
     slice_.edge.show = False
     slice_.mesh.show = True
     slice_.mesh.color = plot.contour(0)
     slice_.mesh.line_thickness = 0.8
 
-a
 # Extract slices
 extracted_slices = plot.slices(0, 1, 2, 3, 4).extract(transient_mode=tp.constant.TransientOperationMode.AllSolutionTimes)
 
