@@ -1,6 +1,6 @@
 import tecplot as tp
 import pandas as pd
-import os
+import os 
 import argparse
 
 #Argparse
@@ -8,21 +8,29 @@ import argparse
 # Connect to a running instance of Tecplot 360 if needed
 tp.session.connect()
 
-tp.macro.execute_command("""$!ReadDataSet  '\"/storage/home/nka5267/work/OneraM6_SU2_RANS.plt\" '
-  ReadDataOption = New
-  ResetStyle = No
-  VarLoadMode = ByName
-  AssignStrandIDs = Yes
-  VarNameList = '\"x\" \"y\" \"z\" \"Density\" \"Momentum U (Density*U)\" \"Momentum V (Density*V)\" \"Momentum W (Density*W)\" \"Energy (Density*E)\" \"SA Turbulent Eddy Viscosity\" \"Pressure\" \"Temperature\" \"Pressure_Coefficient\" \"Mach\" \"Laminar_Viscosity\" \"Skin_Friction_Coefficient\" \"Heat_Flux\" \"Y_Plus\" \"Eddy_Viscosity\"'""")
 
-path = os. get_cwd()
+#trying to define the path
+path = os.getcwd()
 print(path)
+
+datafile = os.path.join(path,'work','data_oneram6wing', 'OneraM6_SU2_RANS.plt')
+dataset= tp.data.load_tecplot(datafile)
+print(dataset)
+
+
+# Get the dataset # Pandas
+cp= pd.read_table('Pressure_Coefficient')
+#cp= dataset.variable('Pressure_Coefficient')
+print(cp)
 
 # Get the active frame and its plot
 frame = tp.active_frame()
 frame.plot_type = tp.constant.PlotType.Cartesian3D
 plot = frame.plot()
 
+cp = tp.data.dataset.zone(1).variable('Pressure_Coefficient')
+y = tp.data.dataset.zone(1).variable('Y')
+x = tp.data.dataset.zone(1).variable('X')
 
 # Set contour variables & colormap
 plot.contour(0).variable_index = 1
@@ -31,10 +39,6 @@ plot.contour(0).colormap_name = 'Modern'
 # Show contour and slices
 plot.show_contour = False
 plot.show_slices = True
-
-# Get the dataset # Pandas
-dataset = tp.active_frame().dataset
-y= dataset.variable(1)
 
 # Set slices properties
 y_positions = [0, y/4, y/2, 3*y/4, y]
@@ -86,8 +90,8 @@ for i in range(5):
     plot = frame.plot()
     
     # Set up the axes for the plot
-    plot.axes.x_axis.variable = dataset.variable(x_var_index)
-    plot.axes.y_axis.variable = dataset.variable(cp_var_index)
+    plot.axes.x_axis.variable.set_variable()
+    plot.axes.x_axis.variable.set_variable(cp)
     
     # Create an XY line from the slice zone data
     slice_zone = extracted_slices.zone(i)
