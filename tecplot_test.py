@@ -18,19 +18,21 @@ dataset= tp.data.load_tecplot(datafile)
 print(dataset)
 
 
-# Get the dataset # Pandas
-cp= pd.read_table('Pressure_Coefficient')
-#cp= dataset.variable('Pressure_Coefficient')
-print(cp)
-
 # Get the active frame and its plot
 frame = tp.active_frame()
 frame.plot_type = tp.constant.PlotType.Cartesian3D
 plot = frame.plot()
 
-cp = tp.data.dataset.zone(1).variable('Pressure_Coefficient')
-y = tp.data.dataset.zone(1).variable('Y')
-x = tp.data.dataset.zone(1).variable('X')
+Pressure_Coefficient = dataset.zone(1).values(11)[:]
+x = dataset.zone(1).values(0)[:]
+y = dataset.zone(1).values(1)[:]
+
+Cp= pd.series(Pressure_Coefficient)
+X = pd.series(x)
+Y = pd.series(y)
+
+print(Cp)
+
 
 # Set contour variables & colormap
 plot.contour(0).variable_index = 1
@@ -48,13 +50,13 @@ for i, y in enumerate(y_positions):
     slice_.show = True
     slice_.slice_source = tp.constant.SliceSource.SurfaceZones
     slice_.orientation = tp.constant.SliceSurface.YPlanes
-    slice_.origin.y = y
+    slice_.origin.y = 0
     slice_.edge.show = False
     slice_.mesh.show = True
     slice_.mesh.color = plot.contour(0)
     slice_.mesh.line_thickness = 0.8
 
-
+a
 # Extract slices
 extracted_slices = plot.slices(0, 1, 2, 3, 4).extract(transient_mode=tp.constant.TransientOperationMode.AllSolutionTimes)
 
