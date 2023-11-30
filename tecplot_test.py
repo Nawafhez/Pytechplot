@@ -1,25 +1,31 @@
 import tecplot as tp
+from tecplot.constant import*
 import pandas as pd
-import os 
-import argparse
+import sys
+import os
 
+import logging
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+import sys
+if '-c' in sys.argv:
+    tp.session.connect()
+
+#import argparse
 #Argparse
 
-# Connect to a running instance of Tecplot 360 if needed
-tp.session.connect()
-
+tp.new_layout()
 
 #trying to define the path
 path = os.getcwd()
-print(path)
-
-datafile = os.path.join(path,'work','data_oneram6wing', 'OneraM6_SU2_RANS.plt')
+datafile = os.path.join(path,'work','surface_flow.vtu')
 dataset= tp.data.load_tecplot(datafile)
-print(dataset)
-
 
 # Get the active frame and its plot
-frame = tp.active_frame()
+page = tp.active_page()
+page.name = 'Density Contour'
+frame = page.active_frame()
 frame.plot_type = tp.constant.PlotType.Cartesian3D
 plot = frame.plot()
 
@@ -27,95 +33,91 @@ Pressure_Coefficient = dataset.zone(1).values(11)[:]
 x = dataset.zone(1).values(0)[:]
 y = dataset.zone(1).values(1)[:]
 
-Cp= pd.Series(Pressure_Coefficient)
-X = pd.Series(x)
 Y = pd.Series(y)
+Ymin = Y.min()+0.01
 Ymax = Y.max()-0.03
-print(Ymax)
-
+yc= (Y-Y.min())/(Y.max()-Y.min())
 
 # Set contour variables & colormap
-plot.contour(0).variable_index = 1
+plot.contour(0).variable_index = 3
 plot.contour(0).colormap_name = 'Modern'
 
+# Set contour variables & colormap
+plot.contour(1).variable_index = 1
+plot.contour(1).colormap_name = 'Small Rainbow'
+
 # Show contour and slices
-plot.show_contour = False
-plot.show_slices = True
+plot.show_contour = True
+plot.show_slices = False
 
 # Set slices properties
-y_positions = [0, Ymax/4, Ymax/2, 3*Ymax/4, Ymax]
+y_positions = [Ymin, Ymax/4, Ymax/2, 3*Ymax/4, Ymax]
+slices_num=0
 
 for i, y1 in enumerate(y_positions):
     slice_ = plot.slice(i)
-    slice_.show = True
+    slice_.show = False
     slice_.slice_source = tp.constant.SliceSource.SurfaceZones
     slice_.orientation = tp.constant.SliceSurface.YPlanes
     slice_.origin.y = y1
     slice_.edge.show = False
-    slice_.mesh.show = True
-    slice_.mesh.color = plot.contour(0)
+    slice_.mesh.show = False
+    slice_.mesh.color = plot.contour(1)
     slice_.mesh.line_thickness = 0.8
+    slices_num=slices_num+1
 
 # Extract slices
 extracted_slices = plot.slices(0, 1, 2, 3, 4).extract(transient_mode=tp.constant.TransientOperationMode.AllSolutionTimes)
 
-# Update the view of the plot
-plot.view.position = (6.96919, plot.view.position[1], plot.view.position[2])
-plot.view.width = 1.62394
-
-# Redraw the plot
-tp.macro.execute_command('$!RedrawAll')
-
-# Additional settings for the x and z axes
-plot.axes.x_axis.show = True
-plot.axes.z_axis.show = True
-plot.axes.axis_mode = tp.constant.AxisMode.Independent
 
 # Define the variable indices for Cp and x
-cp_var_index = 11  
-x_var_index = 0   
+cp_var_index = 11
+x_var_index = 0
+
+page2 = tp.add_page()
+page2.name = 'Cp vs x'
+frame2 = page2.active_frame()
+assert not (frame.active and page.active)
+assert frame2.active and page2.active
+
+for i in range(slices_num):
+
+    page2.add_frame
+
+    # copy of data as a numpy array
+    zone = dataset.zone(i+2)
+    extracted_Cp = zone.values(11)[:]
+    extracted_x = zone.values(0)[:]
+
+    X = pd.Series(extracted_x)
+    Cp = pd.Series(extracted_x)
+
+    # normalize x
+    xc = (X - X.min()) / (X.max() - X.min())
+    extracted_x[:] = xc
+
+    # switch plot type in current frame
+    frame2.plot_type = tp.constant.PlotType.XYLine
+    plot1 = frame2.plot()
+
+    # clear plot
+    plot1.delete_linemaps()
+
+    # create line plot from extracted zone data
+    cp_linemap = plot1.add_linemap('Slice', zone, dataset.variable('x'),
+                            dataset.variable('Pressure_Coefficient'))
+
+    # set style of linemap plot
+    cp_linemap.line.line_thickness = 0.8
+    cp_linemap.y_axis.reverse = True
+
+    # update axes limits to show data
+    plot1.view.fit()
+
+    # export image of pressure coefficient as a function of x/c
+    tp.export.save_png('wing_pressure_coefficient_Slice:'f'{i}''.png', 600, supersample=3)
 
 
 
-# Loop to create a new frame and plot for each Cp graph
-
-for i in range(5):
-
-    # Create a new frame
-    frame = tp.active_page().add_frame()
-    
-    # Set the frame mode to 2D
-    frame.plot_type = tp.constant.PlotType.XYLine
-    
-    # Get the plot in the new frame
-    plot = frame.plot()
-    
-    # Set up the axes for the plot
-    plot.axes.x_axis.variable.set_variable()
-    plot.axes.x_axis.variable.set_variable(cp)
-    
-    # Create an XY line from the slice zone data
-    slice_zone = extracted_slices.zone(i)
-    x_vals = slice_zone.values('x')[:]
-    cp_vals = slice_zone.values('Pressure_Coefficient')[:]
-
-    # Add a new XY line plot with the extracted Cp vs. x data
-    line = plot.add_xy_line(x_vals,cp_vals)
-    
-    # Set the line properties, such as color and line thickness
-    line.line.color = tp.constant.Color.Blue
-    line.line.line_thickness = 0.8
-    
-    # Optionally, set the title of the graph to something descriptive
-    plot.title = f" y{i}"
-    
-    # Redraw the frame
-    frame.draw()
-
-tp.active_page().frames[0].activate()
-
-# Final redraw of the plot
-plot.view.fit()
-tp.macro.execute_command('$!RedrawAll')
-
-# End of script
+tp.macro.execute_extended_command(command_processor_id='Multi Frame Manager',
+    command='TILEFRAMESSQUARE')
