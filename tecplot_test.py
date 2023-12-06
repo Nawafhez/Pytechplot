@@ -19,7 +19,7 @@ tp.new_layout()
 
 #trying to define the path
 path = os.getcwd()
-datafile = os.path.join(path,'work','surface_flow.vtu')
+datafile = os.path.join(path,'work', 'data_oneram6wing', 'OneraM6_SU2_RANS.plt')
 dataset= tp.data.load_tecplot(datafile)
 
 # Get the active frame and its plot
@@ -84,7 +84,7 @@ for i in range(slices_num):
 
     page2.add_frame
 
-    # copy of data as a numpy array
+    # copy of data as a numpy array 
     zone = dataset.zone(i+2)
     extracted_Cp = zone.values(11)[:]
     extracted_x = zone.values(0)[:]
