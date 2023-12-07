@@ -1,10 +1,10 @@
 import tecplot as tp
 from tecplot.constant import *
 import pandas as pd
+import numpy as np
 import sys
 import os
 import logging
-import matplotlib.pyplot as plt
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -14,26 +14,24 @@ if '-c' in sys.argv:
 
 tp.new_layout()
 
-# trying to define the path
-path = os.getcwd()
-datafile = os.path.join(path,'work', 'data_oneram6wing', 'OneraM6_SU2_RANS.plt')
-dataset = tp.data.load_tecplot(datafile)
+# Calling the file into Tecplot
+tp.macro.execute_command("""$!ReadDataSet  '\"STANDARDSYNTAX\" \"1.0\" \"FILENAME_FILE\" \"/storage/home/nka5267/work/surface_flow.vtu\"'
+  DataSetReader = 'VTK Data Loader'
+  ReadDataOption = New
+  ResetStyle = No
+  AssignStrandIDs = Yes
+  InitialPlotType = Automatic
+  InitialPlotFirstZoneOnly = No
+  AddZonesToExistingStrands = No
+  VarLoadMode = ByName""")
 
 # Get the active frame and its plot
 page = tp.active_page()
 page.name = 'Slices'
 frame = page.active_frame()
-frame.plot_type = tp.constant.PlotType.Cartesian3D
+tp.active_frame().plot_type=PlotType.Cartesian3D
 plot = frame.plot()
-
-Pressure_Coefficient = dataset.zone(1).values(11)[:]
-x = dataset.zone(1).values(0)[:]
-y = dataset.zone(1).values(1)[:]
-
-Y = pd.Series(y)
-Ymin = Y.min() + 0.01
-Ymax = Y.max() - 0.03
-yc = (Y - Y.min()) / (Y.max() - Y.min())
+ds = tp.active_frame().dataset
 
 # Set contour variables & colormap
 plot.contour(1).variable_index = 1
@@ -43,11 +41,19 @@ plot.contour(1).colormap_name = 'Small Rainbow'
 plot.show_contour = False
 plot.show_slices = True
 
-# Set slices properties
-y_positions = [Ymin, Ymax / 4, Ymax / 2, 3 * Ymax / 4, Ymax]
-slices_num = 0
+# Allow user to specify the number of slices
+num_slices = int(input("Enter the number of slices: "))
 
-for i, y1 in enumerate(y_positions):
+# Calculate the slice positions
+y = ds.zone(0).values(1)[:]
+Y = pd.Series(y)
+Ymin = Y.min() + 0.01
+Ymax = Y.max() - 0.03
+slice_positions = np.linspace(Ymin, Ymax, num_slices)
+
+
+# Set slices properties and create slices
+for i, y1 in enumerate(slice_positions):
     slice_ = plot.slice(i)
     slice_.show = True
     slice_.slice_source = tp.constant.SliceSource.SurfaceZones
@@ -57,17 +63,18 @@ for i, y1 in enumerate(y_positions):
     slice_.mesh.show = True
     slice_.mesh.color = plot.contour(1)
     slice_.mesh.line_thickness = 0.8
-    slices_num = slices_num + 1
 
 # Extract slices
-extracted_slices = plot.slices(0, 1, 2, 3, 4).extract(transient_mode=tp.constant.TransientOperationMode.AllSolutionTimes)
+slice_indices = range(num_slices)
+extracted_slices = plot.slices(*slice_indices).extract(transient_mode=tp.constant.TransientOperationMode.AllSolutionTimes)
+
 
 all_slices_data = pd.DataFrame()
 
 # Matplotlib plot
 for i, extracted_slice in enumerate(extracted_slices):
 
-    zone = dataset.zone(i+2)
+    zone = ds.zone(i+1)
 
     extracted_Cp = zone.values(11)[:]
     extracted_x = zone.values(0)[:]
