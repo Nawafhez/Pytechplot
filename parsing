@@ -1,0 +1,78 @@
+import pandas as pd
+
+def extract_final_coefficients(file_path):
+    def find_headers_and_first_data_line(file_path, keyword='Iteration'):
+        with open(file_path, 'r') as file:
+            for line_number, line in enumerate(file, 1):
+                if keyword in line:
+                    headers = line.strip().split()
+                    return headers, line_number
+        return [], 0
+
+    def reconstruct_headers(headers):
+        joined_headers = []
+        i = 0
+        while i < len(headers):
+            header = headers[i]
+            # Check for known coefficient indicators and dynamically merge parts
+            if 'Drag' in header or 'CD' == header:
+                if 'Coefficient' in headers[i + 1]:
+                    merged = [header]
+                    while i + 1 < len(headers) and not headers[i + 1].replace('.', '', 1).isdigit():
+                        i += 1
+                        merged.append(headers[i])
+                    joined_headers.append(' '.join(merged))
+                else:
+                    joined_headers.append(header)
+            elif 'Lift' in header or 'CL' == header:
+                if 'Coefficient' in headers[i + 1]:
+                    merged = [header]
+                    while i + 1 < len(headers) and not headers[i + 1].replace('.', '', 1).isdigit():
+                        i += 1
+                        merged.append(headers[i])
+                    joined_headers.append(' '.join(merged))
+                else:
+                    joined_headers.append(header)
+            else:
+                joined_headers.append(header)
+            i += 1
+        return joined_headers
+
+    def read_valid_data(file_path, start_line, headers):
+        data = []
+        with open(file_path, 'r') as file:
+            for _ in range(start_line - 1):
+                next(file)
+            for line in file:
+                parts = line.strip().split()
+                if parts[0].isdigit() and len(parts) >= len(headers):
+                    data_row = parts[:len(headers)]
+                    data.append(data_row)
+        return data
+
+    headers, header_line = find_headers_and_first_data_line(file_path)
+    if not headers:
+        return "No headers found in the file, or incorrect keyword for searching headers."
+
+    reconstructed_headers = reconstruct_headers(headers)
+    valid_data = read_valid_data(file_path, header_line + 1, reconstructed_headers)
+
+    if not valid_data:
+        return "No valid data found in the file."
+
+    # Dynamically find the indices for drag and lift coefficients
+    drag_index = reconstructed_headers.index(next(header for header in reconstructed_headers if 'Drag' in header or 'CD' == header))
+    lift_index = reconstructed_headers.index(next(header for header in reconstructed_headers if 'Lift' in header or 'CL' == header))
+
+    final_iteration_data = valid_data[-1]
+    final_drag_coefficient = final_iteration_data[drag_index]
+    final_lift_coefficient = final_iteration_data[lift_index]
+
+    return {
+        "Drag Coefficient": final_drag_coefficient,
+        "Lift Coefficient": final_lift_coefficient
+    }
+
+# Usage example:
+file_path = "/path/to/your/0.725_output.txt"  # Adjust the path accordingly
+extract_final_coefficients(file_path)
