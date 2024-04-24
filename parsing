@@ -72,18 +72,18 @@ def wait_for_job_completion(job_id, check_interval=60):
             print("Job is still running. Waiting...")
             time.sleep(check_interval)
 
-def extract_final_coefficients(output_file_path):
-    def find_headers_and_first_data_line(output_file_path, keyword='Iteration'):
-        # Skip processing if the file name contains '@1000.sim'
-        if '@01000_output.csv' in output_file_path:
-            return        
-        with open(output_file_path, 'r') as file:
-            for line_number, line in enumerate(file, 1):
-                if keyword in line:
-                    headers = line.strip().split()
-                    return headers, line_number
-        return [], 0
+def find_headers_and_first_data_line(output_file_path, keyword='Iteration'):
+    # Skip processing if the file name contains '@01000_output.csv'
+    if '@01000_output.csv' in output_file_path:
+        return [], 0  # Return an empty list and zero line number
+    with open(output_file_path, 'r') as file:
+        for line_number, line in enumerate(file, 1):
+            if keyword in line:
+                headers = line.strip().split()
+                return headers, line_number
+    return [], 0
 
+def extract_final_coefficients(output_file_path): 
     def reconstruct_headers(headers):
         joined_headers = []
         i = 0
@@ -127,13 +127,16 @@ def extract_final_coefficients(output_file_path):
 
     headers, header_line = find_headers_and_first_data_line(output_file_path)
     if not headers:
-        return "No headers found in the file, or incorrect keyword for searching headers."
+        print("No headers found in the file, or incorrect keyword for searching headers.")
+        return None
 
     reconstructed_headers = reconstruct_headers(headers)
     valid_data = read_valid_data(output_file_path, header_line + 1, reconstructed_headers)
  
     if not valid_data:
-        return "No valid data found in the file."
+        print("No valid data found in the file.")
+        return None
+
     # Dynamically find the indices for drag and lift coefficients
     drag_index = reconstructed_headers.index(next(header for header in reconstructed_headers if 'Drag' in header or 'CD' == header))
     lift_index = reconstructed_headers.index(next(header for header in reconstructed_headers if 'Lift' in header or 'CL' == header))
