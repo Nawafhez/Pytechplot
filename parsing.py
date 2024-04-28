@@ -82,20 +82,22 @@ def extract_final_coefficients(file_path):
         return [], 0
     
     def reconstruct_headers(headers):
-        joined_headers = []
-        i = 0
-        while i < len(headers):
-            header = headers[i]
-            if 'Drag' in header or 'CD' in header or 'Lift' in header or 'CL' in header:
-                merged = [header]
-                while i + 1 < len(headers) and not headers[i + 1].replace('.', '', 1).isdigit():
-                    i += 1
-                    merged.append(headers[i])
-                joined_headers.append(' '.join(merged))
-            else:
-                joined_headers.append(header)
-            i += 1
-        return joined_headers
+      joined_headers = []
+      i = 0
+      while i < len(headers):
+          header = headers[i]
+          if 'Drag' in header or 'CD' == header or 'Lift' in header or 'CL' == header:
+              merged = [header]
+              while i + 1 < len(headers) and not (
+                      'Drag' in headers[i + 1] or 'CD' == headers[i + 1] or
+                      'Lift' in headers[i + 1] or 'CL' == headers[i + 1]):
+                  i += 1
+                  merged.append(headers[i])
+              joined_headers.append(' '.join(merged))
+          else:
+              joined_headers.append(header)
+          i += 1
+      return joined_headers
     
     def read_valid_data(file_path, start_line, headers):
         data = []
@@ -104,7 +106,7 @@ def extract_final_coefficients(file_path):
                 next(file)
             for line in file:
                 parts = line.strip().split()
-                if parts[0].isdigit() : #and len(parts) == len(headers):
+                if parts[0].isdigit() : 
                     data.append(parts)
                 else:
                     #print(f"Skipping line: {line.strip()}")  # Diagnostic print
@@ -116,17 +118,21 @@ def extract_final_coefficients(file_path):
         return "No headers found in the file, or incorrect keyword for searching headers."
     
     reconstructed_headers = reconstruct_headers(headers)
-    #print(f"Reconstructed Headers: {reconstructed_headers}")  # Diagnostic print
+    header_to_index = {header: idx for idx, header in enumerate(reconstructed_headers) if 'Drag' in header or 'Lift' in header}
+    print(f"Reconstructed Headers: {reconstructed_headers}")  # Diagnostic print
     
     valid_data = read_valid_data(file_path, header_line + 1, reconstructed_headers)
     if not valid_data:
         return "No valid data found in the file."
     
+    # Dynamically find the indices for drag and lift coefficients
+    drag_index = reconstructed_headers.index(next(header for header in reconstructed_headers if 'Drag' in header or 'CD' == header))
+    lift_index = reconstructed_headers.index(next(header for header in reconstructed_headers if 'Lift' in header or 'CL' == header))
+  
     final_iteration_data = valid_data[-1]
-    final_drag_coefficient = final_iteration_data[-2]
-    final_lift_coefficient = final_iteration_data[-1]
-
-    # Final result 
+    final_drag_coefficient = final_iteration_data[drag_index]
+    final_lift_coefficient = final_iteration_data[lift_index]
+      
     print("Drag Coefficient @ Mach 0.725:", final_drag_coefficient)
     print("Lift Coefficient @ Mach 0.725:", final_lift_coefficient)
 
